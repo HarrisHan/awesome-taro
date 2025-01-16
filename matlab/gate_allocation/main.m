@@ -1,6 +1,14 @@
 %% 机场停机位分配优化算法
 clear;
 clc;
+
+% 定义算法类型
+algorithm_type = 'EBNSGA-II';  % 可选: 'EBNSGA-II', 'NSGA-II', 'PSO', 'Two-Phase-GA'
+
+% 创建结果目录
+if ~exist('results', 'dir')
+    mkdir('results');
+end
 %% 读取数据
 [num,txt,raw]=xlsread('newdata.xlsx');
 a=num(:,1); %到达时间
@@ -61,8 +69,11 @@ for i=1:NP
     f(i,:)=generate(temp_cell,M,N,gnum,figk,tong,tongg,ling,a,d,T_max);
 end
 
-%% 遗传算法循环(改进EBNSGA-II)
-for gen=1: G
+%% 根据选择的算法执行优化
+switch algorithm_type
+    case 'EBNSGA-II'
+        %% 遗传算法循环(改进EBNSGA-II)
+        for gen=1: G
      objectives = zeros(NP,3);
      for np=1:NP
            objectives(np,1)=func1(f(np,:),M,N,a,d,T_max); %计算F1目标值：非远机位停靠率
@@ -144,15 +155,45 @@ for gen=1: G
      trace(gen)=min(objectives(:,1)); %记录第一个目标的最优值
 end
 
+        end % EBNSGA-II循环结束
+        
+    case 'NSGA-II'
+        [fBest, pareto_front] = nsga2(M, N, a, d, O, S, T_max, NP, G, Pc, Pm, original_f, original_a, original_d);
+        
+    case 'PSO'
+        [fBest, pareto_front] = pso(M, N, a, d, O, S, T_max, NP, G, original_f, original_a, original_d);
+        
+    case 'Two-Phase-GA'
+        [fBest, pareto_front] = two_phase_ga(M, N, a, d, O, S, T_max, NP, G, Pc, Pm, original_f, original_a, original_d);
+        
+end
+
 %% 输出结果
+disp(['算法类型: ' algorithm_type]);
 disp('最优个体为：');
 disp(fBest);
-disp('最优适应度为：');
-disp(trace(end));
 
-%% 绘制收敛曲线
-figure(1);
-plot(trace);
-xlabel('迭代次数');
-ylabel('适应度值');
-title('适应度进化曲线');
+% 保存结果
+save(['results/' algorithm_type '_result.mat'], 'fBest', 'pareto_front');
+
+%% 绘制收敛曲线和比较结果
+if exist('trace', 'var')
+    figure('Name', [algorithm_type ' 收敛曲线']);
+    plot(trace);
+    xlabel('迭代次数');
+    ylabel('适应度值');
+    title([algorithm_type ' 适应度进化曲线']);
+    saveas(gcf, ['results/' algorithm_type '_convergence.fig']);
+end
+
+% 如果需要比较不同算法
+if exist('pareto_front', 'var')
+    figure('Name', [algorithm_type ' Pareto前沿']);
+    scatter3(pareto_front(:,1), pareto_front(:,2), pareto_front(:,3), 'filled');
+    xlabel('F1: 非远机位停靠率');
+    ylabel('F2: 时间间隔');
+    zlabel('F3: 重分配惩罚');
+    title([algorithm_type ' Pareto前沿']);
+    grid on;
+    saveas(gcf, ['results/' algorithm_type '_pareto.fig']);
+end
