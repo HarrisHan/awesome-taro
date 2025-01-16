@@ -23,6 +23,8 @@ fi=fi'; %航班机型
 gk=gk'; %停机位型号
 gnum=gnum'; %停机位组号
 
+N=length(a); %航班数,单染色体上的基因数(即12个变量)(每个基因采用10进制) 
+
 % Store original data before delays for F3 calculation
 original_a = a;
 original_d = d;
@@ -40,8 +42,6 @@ for i = 1:num_delayed
     a(flight_idx) = a(flight_idx) + delay;
     d(flight_idx) = d(flight_idx) + delay;
 end
-
-N=length(a); %航班数,单染色体上的基因数(即12个变量)(每个基因采用10进制) 
 M=64; %机位数
 Gn=23; %机位分组数
 NP=300; %染色体数目(初始化种群的数目)
@@ -70,10 +70,9 @@ for i=1:NP
 end
 
 %% 根据选择的算法执行优化
-switch algorithm_type
-    case 'EBNSGA-II'
-        %% 遗传算法循环(改进EBNSGA-II)
-        for gen=1: G
+if strcmp(algorithm_type, 'EBNSGA-II')
+    %% 遗传算法循环(改进EBNSGA-II)
+    for gen=1: G
      objectives = zeros(NP,3);
      for np=1:NP
            objectives(np,1)=func1(f(np,:),M,N,a,d,T_max); %计算F1目标值：非远机位停靠率
@@ -157,15 +156,15 @@ end
 
         end % EBNSGA-II循环结束
         
-    case 'NSGA-II'
-        [fBest, pareto_front] = nsga2(M, N, a, d, O, S, T_max, NP, G, Pc, Pm, original_f, original_a, original_d);
-        
-    case 'PSO'
-        [fBest, pareto_front] = pso(M, N, a, d, O, S, T_max, NP, G, original_f, original_a, original_d);
-        
-    case 'Two-Phase-GA'
-        [fBest, pareto_front] = two_phase_ga(M, N, a, d, O, S, T_max, NP, G, Pc, Pm, original_f, original_a, original_d);
-        
+elseif strcmp(algorithm_type, 'NSGA-II')
+    [fBest, pareto_front] = nsga2(M, N, a, d, O, S, T_max, NP, G, Pc, Pm, original_f, original_a, original_d);
+    
+elseif strcmp(algorithm_type, 'PSO')
+    [fBest, pareto_front] = pso(M, N, a, d, O, S, T_max, NP, G, original_f, original_a, original_d);
+    
+elseif strcmp(algorithm_type, 'Two-Phase-GA')
+    [fBest, pareto_front] = two_phase_ga(M, N, a, d, O, S, T_max, NP, G, Pc, Pm, original_f, original_a, original_d);
+    
 end
 
 %% 输出结果
