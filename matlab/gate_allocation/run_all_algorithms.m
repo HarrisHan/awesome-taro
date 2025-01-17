@@ -14,7 +14,12 @@ end
 for i = 1:length(algorithms)
     disp(['运行算法: ' algorithms{i}]);
     algorithm_type = algorithms{i};
-    main;  % 运行主程序
+    
+    % 运行主程序并获取所需变量
+    main;  % 运行主程序会设置所有需要的变量
+    
+    % 保存当前算法的结果
+    save(['results/' algorithms{i} '_vars.mat'], 'fBest', 'M', 'N', 'a', 'd', 'O', 'S', 'T_max', 'gnum', 'fi', 'gk');
     
     % 验证约束条件
     disp(['验证' algorithms{i} '的约束条件']);
