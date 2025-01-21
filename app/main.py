@@ -59,7 +59,7 @@ logging.basicConfig(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
+    allow_credentials=False,  # Disable credentials for cross-origin requests
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["Content-Type"],
     max_age=600  # Cache preflight requests for 10 minutes
