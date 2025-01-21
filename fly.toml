@@ -1,0 +1,31 @@
+app = "solana-monitor"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  PORT = "8080"
+  PYTHONPATH = "/app"
+  MAIL_DELIVERY_MODE = "smtp"
+  SMTP_SERVER = "smtp.qq.com"
+  SMTP_PORT = "587"
+  EMAIL_FROM = "1259767623@qq.com"
+  EMAIL_TO = "1259767623@qq.com"
+  SMTP_USERNAME = "1259767623@qq.com"
+  SMTP_PASSWORD = "renogsuioqhnfjdi"
+  SOLANA_RPC_URL = "https://api.mainnet-beta.solana.com"
+
+[[services]]
+  internal_port = 8080
+  protocol = "tcp"
+
+  [[services.ports]]
+    handlers = ["http"]
+    port = "80"
+
+  [[services.ports]]
+    handlers = ["tls", "http"]
+    port = "443"
+
+[deploy]
+  strategy = "immediate"
