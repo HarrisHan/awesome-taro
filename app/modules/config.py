@@ -38,8 +38,8 @@ SMTP_USERNAME = os.getenv('SMTP_USERNAME', '')  # SMTP用户名
 SMTP_PASSWORD = os.getenv('SMTP_PASSWORD', '')  # SMTP密码（QQ邮箱需要使用授权码）
 
 # 邮件地址配置
-EMAIL_FROM = os.getenv('EMAIL_FROM', '1259767623@qq.com')  # 发件人地址
-EMAIL_TO = os.getenv('EMAIL_TO', '1259767623@qq.com')  # 收件人地址
+EMAIL_FROM = os.getenv('EMAIL_FROM', '')  # 发件人地址
+EMAIL_TO = os.getenv('EMAIL_TO', '')  # 收件人地址
 
 # 监控配置
 MONITORING_INTERVAL = int(os.getenv('MONITORING_INTERVAL', '300'))  # 监控间隔（秒），默认5分钟
