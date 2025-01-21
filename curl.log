@@ -1,0 +1,22 @@
+*   Trying 127.0.0.1:8080...
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0* Connected to localhost (127.0.0.1) port 8080 (#0)
+* Server auth using Basic with user '1259767623'
+> GET / HTTP/1.1
+> Host: localhost:8080
+> Authorization: Basic MTI1OTc2NzYyMzpnMTI1OTc2NzYyMw==
+> User-Agent: curl/7.81.0
+> Accept: */*
+> 
+* Mark bundle as not supporting multiuse
+< HTTP/1.1 500 Internal Server Error
+< date: Tue, 21 Jan 2025 15:40:05 GMT
+< server: uvicorn
+< content-length: 21
+< content-type: text/plain; charset=utf-8
+< 
+{ [21 bytes data]
+100    21  100    21    0     0   6953      0 --:--:-- --:--:-- --:--:-- 10500
+* Connection #0 to host localhost left intact
+Internal Server Error

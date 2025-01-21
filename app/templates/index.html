@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<!--
+Solana代币监控系统 - Web界面
+
+功能：
+- 显示监控系统状态
+- 提供启动/停止控制
+- 展示系统配置信息
+
+技术栈：
+- Vue.js 3 用于响应式界面
+- Tailwind CSS 用于样式
+- Material Design Icons 用于图标
+-->
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solana代币监控系统</title>
+    <!-- 加载外部依赖 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/@mdi/font@5.x/css/materialdesignicons.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100">
+    <div id="app" class="container mx-auto px-4 py-8">
+        <!-- 主界面 -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <div class="flex justify-between items-center mb-4">
+                <h1 class="text-2xl font-bold">Solana代币监控系统</h1>
+            </div>
+            <!-- 控制按钮区域 -->
+            <div class="flex space-x-4 mb-6">
+                <button 
+                    @click="startMonitoring" 
+                    :disabled="status.running"
+                    class="bg-green-500 text-white px-4 py-2 rounded disabled:opacity-50">
+                    启动监控
+                </button>
+                <button 
+                    @click="stopMonitoring"
+                    :disabled="!status.running"
+                    class="bg-red-500 text-white px-4 py-2 rounded disabled:opacity-50">
+                    停止监控
+                </button>
+            </div>
+            
+            <!-- 状态显示区域 -->
+            <div class="mb-6">
+                <h2 class="text-xl font-semibold mb-2">监控状态</h2>
+                <div class="bg-gray-100 p-4 rounded">
+                    <p class="mb-2">
+                        当前状态: 
+                        {% raw %}
+                        <span :class="status.running ? 'text-green-500' : 'text-red-500'">
+                            {{ status.running ? '运行中' : '已停止' }}
+                        </span>
+                        {% endraw %}
+                    </p>
+                </div>
+            </div>
+
+            <!-- 配置信息区域 -->
+            <div class="mb-6">
+                <h2 class="text-xl font-semibold mb-2">系统配置</h2>
+                <div class="bg-gray-100 p-4 rounded">
+                    <p class="mb-2">邮件通知: {% if initial_status.config.email_configured %}已配置{% else %}未配置{% endif %}</p>
+                    <p class="mb-2">监控间隔: {{ initial_status.config.monitoring_interval }}秒</p>
+                </div>
+            </div>
+
+            <!-- 符合条件的代币列表 -->
+            <div class="mb-6">
+                <h2 class="text-xl font-semibold mb-2">符合条件的代币</h2>
+                <div class="bg-gray-100 p-4 rounded overflow-x-auto">
+                    <table class="min-w-full table-auto">
+                        <thead>
+                            <tr class="bg-gray-200">
+                                <th class="px-4 py-2 text-left">代币地址</th>
+                                <th class="px-4 py-2 text-right">唯一买家数</th>
+                                <th class="px-4 py-2 text-right">价格涨幅(%)</th>
+                                <th class="px-4 py-2 text-right">当前价格</th>
+                                <th class="px-4 py-2 text-right">初始价格</th>
+                                <th class="px-4 py-2 text-center">最后更新</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% raw %}
+                            <tr v-if="!tokens || tokens.length === 0">
+                                <td colspan="6" class="border px-4 py-2 text-center text-gray-500">
+                                    暂无符合条件的代币
+                                </td>
+                            </tr>
+                            <tr v-for="token in tokens" :key="token.address" class="hover:bg-gray-50">
+                                <td class="border px-4 py-2 font-mono">{{ token.address }}</td>
+                                <td class="border px-4 py-2 text-right">{{ token.unique_buyers }}</td>
+                                <td class="border px-4 py-2 text-right" :class="token.price_change_pct < 0 ? 'text-red-500' : 'text-green-500'">
+                                    {{ token.price_change_pct.toFixed(2) }}%
+                                </td>
+                                <td class="border px-4 py-2 text-right">{{ token.current_price.toFixed(4) }}</td>
+                                <td class="border px-4 py-2 text-right">{{ token.initial_price.toFixed(4) }}</td>
+                                <td class="border px-4 py-2 text-center text-sm text-gray-600">
+                                    {{ new Date(token.last_update).toLocaleString() }}
+                                </td>
+                            </tr>
+                            {% endraw %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vue.js应用脚本 -->
+    <script>
+        const { createApp } = Vue
+
+        // 创建Vue应用实例
+        createApp({
+            // 初始化组件数据
+            data() {
+                return {
+                    // 从服务器获取的初始状态
+                    status: {{ initial_status|tojson|safe }},
+                    tokens: []
+                }
+            },
+            // 组件方法定义
+            methods: {
+                // 格式化日期显示
+                formatDate(timestamp) {
+                    return new Date(timestamp).toLocaleString()
+                },
+                
+                // 从服务器获取最新状态
+                async fetchStatus() {
+                    try {
+                        const response = await fetch('/api/status');
+                        if (response.ok) {
+                            this.status = await response.json();
+                        } else {
+                            console.error('获取状态失败:', response.statusText);
+                        }
+                    } catch (error) {
+                        console.error('获取状态失败:', error);
+                    }
+                },
+                
+                // 获取符合条件的代币列表
+                async fetchTokens() {
+                    try {
+                        const response = await fetch('/api/tokens');
+                        if (response.ok) {
+                            this.tokens = await response.json();
+                        } else {
+                            console.error('获取代币列表失败:', response.statusText);
+                        }
+                    } catch (error) {
+                        console.error('获取代币列表失败:', error);
+                    }
+                },
+                // 启动监控系统
+                async startMonitoring() {
+                    try {
+                        const response = await fetch('/api/start', {
+                            method: 'POST'
+                        });
+                        const result = await response.json();
+                        if (result.status === 'success') {
+                            await this.fetchStatus();
+                        } else {
+                            console.error('启动监控失败:', response.statusText);
+                        }
+                    } catch (error) {
+                        console.error('启动监控失败:', error);
+                    }
+                },
+                // 停止监控系统
+                async stopMonitoring() {
+                    try {
+                        const response = await fetch('/api/stop', {
+                            method: 'POST'
+                        });
+                        const result = await response.json();
+                        if (result.status === 'success') {
+                            await this.fetchStatus();
+                        } else {
+                            console.error('停止监控失败:', response.statusText);
+                        }
+                    } catch (error) {
+                        console.error('停止监控失败:', error);
+                    }
+                }
+            },
+            // 组件挂载后的生命周期钩子
+            mounted() {
+                // 初始化状态和代币列表
+                this.fetchStatus();
+                this.fetchTokens();
+                
+                // 每5秒轮询一次更新
+                setInterval(() => {
+                    this.fetchStatus();
+                    this.fetchTokens();
+                }, 5000);
+            }
+        }).mount('#app')
+    </script>
+</body>
+</html>
